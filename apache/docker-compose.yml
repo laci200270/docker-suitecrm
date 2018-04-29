@@ -1,19 +1,11 @@
 version: '3'
 
 services:
-  openldap:
-    image: zentekmx/openldap:latest
-    container_name: openldap.crm
-    ports:
-    - "389:389"
-    volumes:
-    - ldap-volume:/var/lib/ldap:Z
-
-  mysql:
-    image: mysql:5.7
+  mariadb:
+    image: 'mariadb:10.3'
     container_name: mysql.crm
     ports:
-    - "3306:3306"
+    - 3306:3306
     volumes:
     - db-volume:/var/lib/mysql:Z
     environment:
@@ -23,13 +15,12 @@ services:
     - MYSQL_DATABASE=suitecrmdb
 
   suitecrm:
-    image: zentekmx/suitecrm:latest
+    image: blacs30:suitecrm
     container_name: suitecrm.crm
     depends_on:
-    - openldap
-    - mysql
+    - mariadb
     ports:
-    - "80:80"
+    - 80:80
     tty: true
     environment:
     - CURRENCY_ISO4217=MXN
@@ -38,7 +29,7 @@ services:
     - EXPORT_CHARSET=ISO-8859-1
     - DEFAULT_LANGUAGE=en_us
     - DATABASE_TYPE=mysql
-    - DATABASE_HOST=mysql
+    - DATABASE_HOST=mariadb
     - DB_ADMIN_PASSWORD=secret
     - DB_ADMIN_USERNAME=admin
     - DATABASE_NAME=suitecrmdb
@@ -48,6 +39,5 @@ services:
     - SYSTEM_NAME=Zentek CRM
 
 volumes:
-    ldap-volume:
     db-volume:
 

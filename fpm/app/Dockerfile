@@ -1,7 +1,6 @@
-FROM php:7.0-apache
-MAINTAINER Marco A Rojas <marco.rojas@zentek.com.mx>
+FROM php:7.1-fpm
 
-ENV SCRM_VERSION v7.8.11
+ENV SCRM_VERSION v7.10.4
 
 # Install requirements
 RUN apt-get update \
@@ -20,6 +19,7 @@ RUN apt-get update \
             libkrb5-dev \
             libldap2-dev \
             cron \
+            git \
             busybox
 
 # Busybox installation
@@ -55,25 +55,27 @@ RUN mkdir conf.d \
     && touch conf.d/config.php conf.d/config_override.php \
     && ln -s conf.d/config.php \
     && ln -s conf.d/config_override.php
-RUN chown -R www-data:www-data . && chmod -R 755 .
 
 RUN (crontab -l 2>/dev/null; echo "* * * * *  php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
 
-#bootstrap files
-RUN mkdir /bootstrap
-RUN curl -o /bootstrap/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && chmod +x /bootstrap/wait-for-it
+# composer
+RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
+RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+RUN composer install --no-plugins --no-scripts
+
+# bootstrap files
 COPY php.custom.ini /usr/local/etc/php/conf.d/
 COPY ./bootstrap /bootstrap
 
-# Clean temporary files and packages
+# clean temporary files and packages
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 VOLUME [ "/var/www/html/upload", "/var/www/html/conf.d" ]
 
 EXPOSE 80
 
-CMD ["/bootstrap/suitecrm-init.sh"]
+ENTRYPOINT ["/bootstrap/suitecrm-init.sh"]
+CMD ["php-fpm"]
 
 # End of file
 # vim: set ts=2 sw=2 noet:
-

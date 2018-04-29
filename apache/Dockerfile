@@ -65,8 +65,6 @@ RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 RUN composer install --no-plugins --no-scripts
 
 # bootstrap files
-RUN mkdir /bootstrap
-RUN curl -o /bootstrap/wait-for-it https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && chmod +x /bootstrap/wait-for-it
 COPY php.custom.ini /usr/local/etc/php/conf.d/
 COPY ./bootstrap /bootstrap
 

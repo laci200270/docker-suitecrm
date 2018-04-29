@@ -5,8 +5,8 @@ readonly DOCKER_BOOTSTRAPPED="/bootstrap/docker_bootstrapped"
 readonly WAIT_FOR="/bootstrap/wait-for-it"
 readonly CONFIG_SI_FILE="/var/www/html/config_si.php"
 
-CURRENCY_ISO4217="${CURRENCY_ISO4217:-USD}"
-CURRENCY_NAME="${CURRENCY_NAME:-US Dollar}"
+CURRENCY_ISO4217="${CURRENCY_ISO4217:-EUR}"
+CURRENCY_NAME="${CURRENCY_NAME:-Euro}"
 DATE_FORMAT="${DATE_FORMAT:-d-m-Y}"
 EXPORT_CHARSET="${EXPORT_CHARSET:-ISO-8859-1}"
 DEFAULT_LANGUAGE="${DEFAULT_LANGUAGE:-en_us}"
@@ -19,7 +19,7 @@ POPULATE_DEMO_DATA="${POPULATE_DEMO_DATA:-false}" # Not yet implemented
 SITE_USERNAME="${SITE_USERNAME:-admin}"
 SITE_PASSWORD="${SITE_PASSWORD:-password}"
 SITE_URL="${SITE_URL:-http://localhost}"
-SYSTEM_NAME="${SYSTEM_NAME:-Zentek CRM}"
+SYSTEM_NAME="${SYSTEM_NAME:-delight-photography CRM}"
 
 ## Built in functions ##
 
@@ -66,7 +66,8 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "Configuring suitecrm for first run"
 	write_suitecrm_config
 	cat ${CONFIG_SI_FILE}
-	$WAIT_FOR ${DATABASE_HOST}:3306 -t 60 -- echo "Database is up"
+  until nc ${DATABASE_HOST} 3306; do sleep 3; echo Using DB host: ${DATABASE_HOST}; echo "Waiting for DB to come up..."; done
+  echo "DB is available now."
 
   echo "##################################################################################"
   echo "##Running silent install, will take a couple of minutes, so go and take a tea...##"
@@ -80,10 +81,10 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "##################################################################################"
 
   touch ${DOCKER_BOOTSTRAPPED}
-	apache2-foreground
 else
   echo "Ready to use suitecrm..."
-	apache2-foreground
 fi
 # End of file
 # vim: set ts=2 sw=2 noet:
+
+exec "$@"
