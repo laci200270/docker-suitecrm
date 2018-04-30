@@ -2,8 +2,8 @@
 set -eu
 
 readonly DOCKER_BOOTSTRAPPED="/bootstrap/docker_bootstrapped"
-readonly WAIT_FOR="/bootstrap/wait-for-it"
 readonly CONFIG_SI_FILE="/var/www/html/config_si.php"
+readonly CONFIG_OVERRIDE_FILE="/var/www/html/config_override.php"
 
 CURRENCY_ISO4217="${CURRENCY_ISO4217:-EUR}"
 CURRENCY_NAME="${CURRENCY_NAME:-Euro}"
@@ -86,5 +86,15 @@ else
 fi
 # End of file
 # vim: set ts=2 sw=2 noet:
+
+if [ -n "${HTTP_REFERER}" ]; then
+  ref_number=0
+  for referer in ${HTTP_REFERER//,/ }; do
+    if ! grep -Eq http_referer.*${referer} ${CONFIG_OVERRIDE_FILE} ; then
+      printf "\n\$sugar_config['http_referer']['list'][${ref_number}] = '${referer}';" >> ${CONFIG_OVERRIDE_FILE}
+    fi
+    ref_number=$((ref_number+1))
+  done
+fi
 
 exec "$@"

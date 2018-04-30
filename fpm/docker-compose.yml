@@ -33,6 +33,7 @@ services:
     - DB_ADMIN_PASSWORD=secret
     - DB_ADMIN_USERNAME=admin
     - DATABASE_NAME=suitecrmdb
+    - HTTP_REFERER=crm.example.com
     - SITE_USERNAME=admin
     - SITE_PASSWORD=password
     - SITE_URL=http://localhost
