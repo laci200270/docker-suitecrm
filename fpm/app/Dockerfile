@@ -56,7 +56,7 @@ RUN mkdir conf.d \
     && ln -s conf.d/config.php \
     && ln -s conf.d/config_override.php
 
-RUN (crontab -l 2>/dev/null; echo "* * * * *  php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
+RUN (crontab -l 2>/dev/null; echo "* * * * * www-data php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
 
 # composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
