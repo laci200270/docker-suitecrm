@@ -3,16 +3,16 @@ version: '3'
 services:
   mariadb:
     image: 'mariadb:10.3'
-    container_name: mysql.crm
+    container_name: mariadb.crm
     ports:
     - "3306:3306"
     volumes:
     - db:/var/lib/mysql:Z
     environment:
-    - MYSQL_USER=admin
-    - MYSQL_PASSWORD=secret
+    - MYSQL_USER=dbuser
+    - MYSQL_PASSWORD=dbuserpass
     - MYSQL_ROOT_PASSWORD=secret
-    - MYSQL_DATABASE=suitecrmdb
+    - MYSQL_DATABASE=crmdb
 
   app:
     build: ./app
@@ -22,25 +22,11 @@ services:
     tty: true
     volumes:
       - suitecrm:/var/www/html
-    environment:
-    - CURRENCY_ISO4217=EUR
-    - CURRENCY_NAME=Euro
-    - DATE_FORMAT=d-m-Y
-    - EXPORT_CHARSET=ISO-8859-1
-    - DEFAULT_LANGUAGE=en_us
-    - DATABASE_TYPE=mysql
-    - DATABASE_HOST=mariadb
-    - DB_ADMIN_PASSWORD=secret
-    - DB_ADMIN_USERNAME=admin
-    - DATABASE_NAME=suitecrmdb
-    - HTTP_REFERER=crm.example.com
-    - SITE_USERNAME=admin
-    - SITE_PASSWORD=password
-    - SITE_URL=http://localhost
-    - SYSTEM_NAME=delight photography CRM
+      - suitecrm-confg:/var/www/html/conf.d
 
   web:
     build: ./web
+    container_name: nginx.crm
     restart: always
     ports:
       - 8080:80
@@ -52,3 +38,4 @@ services:
 volumes:
     db:
     suitecrm:
+    suitecrm-confg:

@@ -1,6 +1,6 @@
 FROM php:7.1-fpm
 
-ENV SCRM_VERSION v7.10.5
+ENV SCRM_VERSION v7.10.4
 
 # Install requirements
 RUN apt-get update \
@@ -20,10 +20,7 @@ RUN apt-get update \
             libldap2-dev \
             cron \
             git \
-            busybox
-
-# Busybox installation
-RUN busybox --install
+            busybox-static
 
 # Docker image configuration
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
@@ -56,12 +53,14 @@ RUN mkdir conf.d \
     && ln -s conf.d/config.php \
     && ln -s conf.d/config_override.php
 
-RUN (crontab -l 2>/dev/null; echo "* * * * * www-data php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
-
 # composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
 RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 RUN composer install --no-plugins --no-scripts
+
+# Adding crontab for www-data user
+RUN mkdir -p /var/spool/cron/crontabs; \
+    echo '* * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
 
 # bootstrap files
 COPY php.custom.ini /usr/local/etc/php/conf.d/
@@ -76,6 +75,3 @@ EXPOSE 80
 
 ENTRYPOINT ["/bootstrap/suitecrm-init.sh"]
 CMD ["php-fpm"]
-
-# End of file
-# vim: set ts=2 sw=2 noet:
