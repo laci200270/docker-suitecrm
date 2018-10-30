@@ -1,6 +1,6 @@
 FROM php:7.1-fpm
 
-ENV SCRM_VERSION v7.10.7
+ENV SCRM_VERSION v7.10.10
 
 # Install requirements
 RUN apt-get update \
