@@ -1,4 +1,5 @@
-FROM php:7.1-fpm
+FROM php:7.1-apache
+MAINTAINER Marco A Rojas <marco.rojas@zentek.com.mx>
 
 ENV SCRM_VERSION v7.10.10
 
@@ -20,7 +21,10 @@ RUN apt-get update \
             libldap2-dev \
             cron \
             git \
-            busybox-static
+            busybox
+
+# Busybox installation
+RUN busybox --install
 
 # Docker image configuration
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
@@ -53,18 +57,19 @@ RUN mkdir conf.d \
     && ln -s conf.d/config.php \
     && ln -s conf.d/config_override.php
 
+RUN (crontab -l 2>/dev/null; echo "* * * * *  php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
+
 # composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
 RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 RUN composer install --no-plugins --no-scripts
 
-# Adding crontab for www-data user
-RUN mkdir -p /var/spool/cron/crontabs; \
-    echo '* * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
-
 # bootstrap files
 COPY php.custom.ini /usr/local/etc/php/conf.d/
 COPY ./bootstrap /bootstrap
+
+# fix known bug https://stackoverflow.com/a/53408865/8707288
+RUN sed -i 's%const  *REGEX_FIELD_PATTERN *= *./\[\^\\w-,\]/.;%const REGEX_FIELD_PATTERN = '\''/[^\\w-,\\s\\]/'\'';%'  Api/V8/Param/Options/Fields.php
 
 # clean temporary files and packages
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -73,5 +78,8 @@ VOLUME [ "/var/www/html/upload", "/var/www/html/conf.d" ]
 
 EXPOSE 80
 
-ENTRYPOINT ["/bootstrap/suitecrm-init.sh"]
-CMD ["php-fpm"]
+CMD ["/bootstrap/suitecrm-init.sh"]
+
+# End of file
+# vim: set ts=2 sw=2 noet:
+
